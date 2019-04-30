@@ -52,7 +52,7 @@ export default {
     },
     methods : {
       // 导入图片时，更换展示区块的URL
-      imgChange: (event) => {
+      imgChange: function (event) {
       // 根据这个 <input> 获取文件的 HTML5 js对象
         var files = event.target.files
         if (files && files.length > 0) {
