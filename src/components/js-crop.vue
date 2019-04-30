@@ -45,7 +45,9 @@ export default {
           clientY: 0,
         },             // 拖拽事件，鼠标在dom中的位置
         imgContainerLeft: 0,  // 图片剪切区域距离浏览器的left 距离
-        imgContainerTop: 0    // 图片剪切区域距离浏览器的top 距离
+        imgContainerTop: 0,    // 图片剪切区域距离浏览器的top 距离
+        imgContainerWidth: 0,  // 图片剪切区域的宽
+        imgContainerHeight: 0  // 图片剪切区域的高
       }
     },
     methods : {
@@ -71,23 +73,45 @@ export default {
         let img_container = document.getElementById('imgContainer')
         this.imgContainerLeft = img_container.style.left
         this.imgContainerTop = img_container.style.top
-        console.log(e.target.style.left)
-        console.log(e.target.style.left.slice(0,-2))
+        // 图片容器的宽高
+        this.imgContainerWidth = img_container.clientWidth
+        this.imgContainerHeight = img_container.clientHeight
         // 记录此时鼠标的在dom中位置
         this.mouseInDom.clientX = e.clientX - this.imgContainerLeft - 30 - Number(e.target.style.left.slice(0,-2))
         this.mouseInDom.clientY = e.clientY - this.imgContainerTop - 30 - Number(e.target.style.top.slice(0,-2))
-        console.log('鼠标在dom中的位置',this.mouseInDom)
       },
       // 剪切框拖拽结束，并改变其位置
       mainBoxDragE: function (e) {
-        console.log(e)
         // 鼠标的位置
         let clientX = e.clientX
         let clientY = e.clientY
-        console.log("鼠标的位置", clientX )
+        // 移动后剪切框的位置
+        let top = clientY - this.imgContainerTop - 30 - this.mouseInDom.clientY 
+        let left = clientX - this.imgContainerLeft - 30 - this.mouseInDom.clientX
+        // 获取剪切框的宽高
+        let mainBox = document.getElementById('mainBox')
+        let mainboxWidth = mainBox.clientWidth
+        let mainboxHeight = mainBox.clientHeight
+        // 判断剪切框被脱出的情况，并处理
+        if (top < this.imgContainerTop) {
+          if(!this.imgContainerTop) {
+            top = 0
+          }
+        }
+        if (left < this.imgContainerLeft){
+          if(!this.imgContainerLeft) {
+            left = 0
+          }
+        }
+        if (top + mainboxHeight > this.imgContainerTop + this.imgContainerHeight) {
+          top = this.imgContainerTop + this.imgContainerHeight - mainboxHeight
+        }
+        if (left + mainboxWidth > this.imgContainerLeft + this.imgContainerWidth) {
+          left = this.imgContainerLeft + this.imgContainerWidth - mainboxWidth
+        }
         // 改变剪切框的位置
-        e.target.style.top = clientY - this.imgContainerTop - 30 - this.mouseInDom.clientY + 'px'
-        e.target.style.left = clientX - this.imgContainerLeft - 30 - this.mouseInDom.clientX + 'px'
+        e.target.style.top = top + 'px'
+        e.target.style.left = left + 'px'
       }
     },
     created () {
