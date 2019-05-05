@@ -1,37 +1,38 @@
 <template>
   <div>
-       <div id="crop_image_content">
-            <!-- 裁剪部分 -->
-            <div id="cropBox">
-                <div id="imgContainer">
-                  <img id="cropimg1" alt="" :src="imgURL">
-                </div>
-                <!-- 裁剪框 -->
-                <div id="mainBox" draggable="true" @dragstart="mainBoxDragS" @dragend="mainBoxDragE">
-                    <!-- <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
-                    <div id="up" class="minBox up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <!-- <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
-                    <div id="left" class="minBox left" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <div id="right" class="minBox right" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <!-- <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
-                    <div id="down" class="minBox down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <!-- <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
-                </div>
-            </div>
-            <!-- 预览部分 -->
-            <!-- <div id="preview">
-                <img id="cropimg3" alt="" :src="imgURL">
-            </div> -->
+      <div id="crop_image_content">
+        <!-- 裁剪部分 -->
+        <div id="imgContainer" ref="imgContainer">
+          <img id="cropimg" alt="" :src="imgURL" ref="img">
         </div>
+        <!-- 裁剪框 -->
+        <div id="mainBox" draggable="true" @dragstart="mainBoxDragS" @dragend="mainBoxDragE">
+            <!-- <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="up" class="minBox up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+            <!-- <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="left" class="minBox left" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+            <div id="right" class="minBox right" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+            <!-- <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="down" class="minBox down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+            <!-- <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+        </div>
+      </div>
 
     <form id="uploadForm" action="">
       <div id="uploadImage">
-        <!-- <img id="cropimg4" alt="" :src="imgURL"> -->
         <a href="javascript:;" class="addImage">
           <input id="imgFile" type="file" name="imgFile" @change="imgChange">
         </a>
       </div>
     </form>
+
+    <div id="dataContainer">
+      <P>位置相对于左上角（top left）</P>
+      <p>左上角：{{top_T}} {{left_L}}</p>
+      <p>右上角：{{top_T}} {{left_R}}</p>
+      <p>左下角：{{top_B}} {{left_L}}</p>
+      <p>右下角：{{top_B}} {{left_R}}</p>
+    </div>
   </div>
 </template>
 <script>
@@ -48,7 +49,23 @@ export default {
         imgContainerTop: 0,    // 图片剪切区域距离浏览器的top 距离
         imgContainerWidth: 0,  // 图片剪切区域的宽
         imgContainerHeight: 0,  // 图片剪切区域的高
-        BOX_MINIMUM: 10          // 裁剪框的最小范围
+        BOX_MINIMUM: 10,          // 裁剪框的最小范围
+        left_L: '0%',              // 剪切框左边的left位置
+        top_T: '0%',               // 剪切框上边的top位置
+        left_R: '0%',             // 剪切框右边的left位置,
+        top_B: '0%'               // 剪切框下边的top位置
+      }
+    },
+    mounted: function () {
+      // 图片容器的位置
+      let img_container = this.$refs.imgContainer
+      this.imgContainerLeft = img_container.style.left
+      this.imgContainerTop = img_container.style.top
+      // 图片容器的宽高
+      this.imgContainerWidth = img_container.clientWidth
+      // 因为图片加载时异步的，要等加载完才能获取到正确的高度
+      this.$refs.img.onload = ()=>{
+          this.imgContainerHeight = img_container.clientHeight
       }
     },
     methods : {
@@ -70,13 +87,6 @@ export default {
       },
       // 剪切框拖拽开始,记录鼠标距离拖拽dom 的位置
       mainBoxDragS: function (e) {
-        // 图片容器的位置
-        let img_container = document.getElementById('imgContainer')
-        this.imgContainerLeft = img_container.style.left
-        this.imgContainerTop = img_container.style.top
-        // 图片容器的宽高
-        this.imgContainerWidth = img_container.clientWidth
-        this.imgContainerHeight = img_container.clientHeight
         // 记录此时鼠标的在dom中位置
         this.mouseInDom.clientX = e.clientX - this.imgContainerLeft - 30 - Number(e.target.style.left.slice(0,-2))
         this.mouseInDom.clientY = e.clientY - this.imgContainerTop - 30 - Number(e.target.style.top.slice(0,-2))
@@ -88,6 +98,8 @@ export default {
         } else {
           this.moveBox(e)
         }
+        // 计算剪切框的位置
+        this.computePosition()
       },
       // 移动剪切框
       moveBox: function(e) {
@@ -157,6 +169,8 @@ export default {
             this.rightOrDown(clientY, mainBox, mainBoxTop, 'height')
           }
         }
+        // 计算剪切框的位置
+        this.computePosition()
       },
       // 向右或向下拉伸
       rightOrDown: function (clientXY, mainBox, LeftOrTop, typeWH) {
@@ -206,6 +220,21 @@ export default {
         let typeLT = (typeWH === 'width') ? 'left' : 'top'
         mainBox.style[typeWH] = widthOrHeight + 'px'
         mainBox.style[typeLT] = newLOrT + 'px'
+      },
+      // 计算裁剪框的位置
+      computePosition: function() {
+        let mainBox = document.getElementById('mainBox')
+        let width = mainBox.clientWidth
+        let height = mainBox.clientHeight
+        console.log(mainBox)
+        let left = Number(mainBox.style.left.slice(0,-2))
+        let top = Number(mainBox.style.top.slice(0,-2))
+        console.log(left)
+        console.log(this.imgContainerWidth)
+        this.left_L = ((left / this.imgContainerWidth) * 100 + '').slice(0, 5) + '%'
+        this.top_T = ((top / this.imgContainerHeight) * 100 + '').slice(0, 5) + '%'
+        this.left_R = (((left + width) / this.imgContainerWidth) * 100 + '').slice(0, 5) + '%'
+        this.top_B = (((top + height) / this.imgContainerHeight) * 100 + '').slice(0, 5) + '%'
       }
     }
 }
@@ -221,19 +250,15 @@ body {
   width: 92%;
   margin: 30px;
 }
-
-#cropBox {
-  position: relative;
-}
 #crop_image_content #imgContainer {
   font-size: 0;
   position: absolute;
   top: 0;
   left: 0;
-  width: 30%;
+  width: 40%;
   border: 1px solid pink;
 }
-#crop_image_content #cropimg1 {
+#crop_image_content #cropimg {
   width: 100%;
 }
 
@@ -302,5 +327,11 @@ body {
   bottom: -4px;
   right: -4px;
   cursor: se-resize;
+}
+#uploadForm {
+  clear: both;
+}
+#dataContainer {
+  margin-top: 5%;
 }
 </style>
