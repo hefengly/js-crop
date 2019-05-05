@@ -226,11 +226,8 @@ export default {
         let mainBox = document.getElementById('mainBox')
         let width = mainBox.clientWidth
         let height = mainBox.clientHeight
-        console.log(mainBox)
         let left = Number(mainBox.style.left.slice(0,-2))
         let top = Number(mainBox.style.top.slice(0,-2))
-        console.log(left)
-        console.log(this.imgContainerWidth)
         this.left_L = ((left / this.imgContainerWidth) * 100 + '').slice(0, 5) + '%'
         this.top_T = ((top / this.imgContainerHeight) * 100 + '').slice(0, 5) + '%'
         this.left_R = (((left + width) / this.imgContainerWidth) * 100 + '').slice(0, 5) + '%'
