@@ -8,14 +8,14 @@
                 </div>
                 <!-- 裁剪框 -->
                 <div id="mainBox" draggable="true" @dragstart="mainBoxDragS" @dragend="mainBoxDragE">
-                    <div id="left-up" class="minBox left-up"></div>
-                    <div id="up" class="minBox up"></div>
-                    <div id="right-up" class="minBox right-up"></div>
-                    <div id="left" class="minBox left"></div>
-                    <div id="right" class="minBox right"></div>
-                    <div id="left-down" class="minBox left-down"></div>
-                    <div id="down" class="minBox down"></div>
-                    <div id="right-down" class="minBox right-down"></div>
+                    <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="up" class="minBox up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="left" class="minBox left" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="right" class="minBox right" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="down" class="minBox down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
                 </div>
             </div>
             <!-- 预览部分 -->
@@ -80,8 +80,16 @@ export default {
         this.mouseInDom.clientX = e.clientX - this.imgContainerLeft - 30 - Number(e.target.style.left.slice(0,-2))
         this.mouseInDom.clientY = e.clientY - this.imgContainerTop - 30 - Number(e.target.style.top.slice(0,-2))
       },
-      // 剪切框拖拽结束，并改变其位置
+      // 剪切框拖拽结束，判断拖拽的是大方块还是小方块，大方块就移动，小方块就缩放
       mainBoxDragE: function (e) {
+        if (e.target.id !== 'mainBox') {
+          return false
+        } else {
+          this.moveBox(e)
+        }
+      },
+      // 移动剪切框
+      moveBox: function(e) {
         // 鼠标的位置
         let clientX = e.clientX
         let clientY = e.clientY
@@ -112,20 +120,83 @@ export default {
         // 改变剪切框的位置
         e.target.style.top = top + 'px'
         e.target.style.left = left + 'px'
+      },
+      // 剪切框缩放的开始
+      changeDragS: function (e) {
+        e.stopPropagation()
+        // console.log('sdafas')
+      },
+      // 剪切框大小的切换
+      changeE: function (e) {
+        let clientX = e.clientX
+        let clientY = e.clientY
+        let mainBox = document.getElementById('mainBox')
+        // 剪切框的left
+        let mainBoxLeft = Number(mainBox.style.left.slice(0, -2))
+        // 剪切框的up
+        let mainBoxUp = Number(mainBox.style.up.slice(0, -2))
+        switch (e.target.id) {
+          case 'right': {
+            this.rightChange({clientX,clientY}, mainBox, mainBoxLeft)
+            break
+          }
+          case 'left': {
+            this.leftChange({clientX,clientY}, mainBox, mainBoxLeft)
+            break
+          }
+          case 'up': {
+            this.upChange({clientX,clientY}, mainBox, mainBoxUp)
+          }
+        }
+      },
+      // 向右移动
+      rightChange: function (obj, mainBox, mainBoxLeft) {
+        let {clientX, clientY} = obj
+        // 剪切框的width
+        let width = clientX - 30 - mainBoxLeft
+        // 剪切框可以向右伸长的最长长度
+        let largeWidth = this.imgContainerLeft + this.imgContainerWidth - mainBoxLeft
+        // 如果超出的话，做截断处理
+        width = width > largeWidth ? largeWidth : width
+        mainBox.style.width = width + 'px'
+        
+      },
+      // 向左移动
+      leftChange: function(obj, mainBox, mainBoxLeft) {
+        let {clientX, clientY} = obj
+        // 当drop时，clientX突然会变为0，小坑
+        if(clientX === 0) {
+          return false
+        }
+        // 剪切框原本的宽
+        let oldWidth = mainBox.clientWidth
+        // 剪切框的width
+        let width = oldWidth + mainBoxLeft + 30 - clientX
+        // 剪切框移动后的left
+        let leftMove = clientX -30
+        // 剪切框可以向左伸长的最长长度
+        let largeWidth = mainBoxLeft + oldWidth
+        // 如果超出的话，做截断处理
+        if(width > largeWidth) {
+          width = largeWidth
+          leftMove = 0
+        }
+        mainBox.style.width = width + 'px'
+        mainBox.style.left = leftMove + 'px'
       }
     },
     created () {
-      window.onmousedown = (e) => {
-        e.stopPropagation()
-        this.ifDown = true
-        // console.log(e)
-        // console.log('鼠标按下啦')
-      }
-      window.onmouseup = (e) => {
-        e.stopPropagation()
-        // this.ifDown = false
-        // console.log('鼠标没按啦')
-      }
+      // window.onmousedown = (e) => {
+      //   e.stopPropagation()
+      //   this.ifDown = true
+      //   // console.log(e)
+      //   // console.log('鼠标按下啦')
+      // }
+      // window.onmouseup = (e) => {
+      //   e.stopPropagation()
+      //   // this.ifDown = false
+      //   // console.log('鼠标没按啦')
+      // }
     }
 }
 </script>
