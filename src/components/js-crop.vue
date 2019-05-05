@@ -136,21 +136,26 @@ export default {
         let mainBoxLeft = Number(mainBox.style.left.slice(0, -2))
         // 剪切框的up
         let mainBoxTop = Number(mainBox.style.top.slice(0, -2))
+        // 剪切宽原本的宽width
+        let oldWidth = mainBox.clientWidth
+        // 剪切框原本的高height
+        let oldHeight = mainBox.clientHeight
         switch (e.target.id) {
           case 'right': {
             this.rightChange({clientX,clientY}, mainBox, mainBoxLeft)
             break
           }
           case 'left': {
-            this.leftChange({clientX,clientY}, mainBox, mainBoxLeft)
+            this.leftOrUp(clientX, mainBox, mainBoxLeft, oldWidth, 'width')
             break
           }
           case 'up': {
-            // this.upChange({clientX,clientY}, mainBox, mainBoxUp)
+            this.leftOrUp(clientY, mainBox, mainBoxTop, oldHeight, 'height')
+            break
           }
         }
       },
-      // 向右移动
+      // 向右拉伸
       rightChange: function (obj, mainBox, mainBoxLeft) {
         let {clientX} = obj
         // 剪切框的width
@@ -166,32 +171,31 @@ export default {
         mainBox.style.width = width + 'px'
         
       },
-      // 向左移动
-      leftChange: function(obj, mainBox, mainBoxLeft) {
-        let {clientX} = obj
-        // 当drop时，clientX突然会变为0，小坑
-        if(clientX === 0) {
+      // 向上或者向左拉伸
+      leftOrUp: function(clientXY, mainBox, LeftOrTop, oldHW, typeWH) {
+        // 当drop时，clientX或者clientY突然会变为0，小坑
+        if(clientXY === 0) {
           return false
         }
-        // 剪切框原本的宽
-        let oldWidth = mainBox.clientWidth
-        // 剪切框的width
-        let width = oldWidth + mainBoxLeft + 30 - clientX
-        // 剪切框移动后的left
-        let leftMove = clientX -30
-        // 剪切框可以向左伸长的最长长度
-        let largeWidth = mainBoxLeft + oldWidth
+        // 剪切框移动后的width或height
+        let widthOrHeight = oldHW + LeftOrTop + 30 - clientXY
+        // 剪切框移动后的left或top
+        let newLOrT = clientXY - 30
+        // 剪切框可以向左或向上伸长的最长长度
+        let largeWOrH = LeftOrTop + oldHW
         // 如果超出的话，做截断处理
-        if(width > largeWidth) {
-          width = largeWidth
-          leftMove = 0
+        if(widthOrHeight > largeWOrH) {
+          widthOrHeight = largeWOrH
+          newLOrT = 0
         }
-        // 当裁剪宽小于最小宽度时，不作处理，否则会出现裁剪框一直移动的问题
-        if(width < this.BOX_MINIMUM) {
+        // 当裁剪宽高小于最小宽高时，不作处理，否则会出现裁剪框一直移动的问题
+        if(widthOrHeight < this.BOX_MINIMUM) {
           return
         }
-        mainBox.style.width = width + 'px'
-        mainBox.style.left = leftMove + 'px'
+        // 判断时left还是top
+        let typeLT = (typeWH === 'width') ? 'left' : 'top'
+        mainBox.style[typeWH] = widthOrHeight + 'px'
+        mainBox.style[typeLT] = newLOrT + 'px'
       }
     },
     created () {
