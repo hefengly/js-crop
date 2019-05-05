@@ -142,7 +142,7 @@ export default {
         let oldHeight = mainBox.clientHeight
         switch (e.target.id) {
           case 'right': {
-            this.rightChange({clientX,clientY}, mainBox, mainBoxLeft)
+            this.rightOrDown(clientX, mainBox, mainBoxLeft, 'width')
             break
           }
           case 'left': {
@@ -153,23 +153,33 @@ export default {
             this.leftOrUp(clientY, mainBox, mainBoxTop, oldHeight, 'height')
             break
           }
+          case 'down': {
+            this.rightOrDown(clientY, mainBox, mainBoxTop, 'height')
+          }
         }
       },
-      // 向右拉伸
-      rightChange: function (obj, mainBox, mainBoxLeft) {
-        let {clientX} = obj
-        // 剪切框的width
-        let width = clientX - 30 - mainBoxLeft
-        // 剪切框可以向右伸长的最长长度
-        let largeWidth = this.imgContainerLeft + this.imgContainerWidth - mainBoxLeft
+      // 向右或向下拉伸
+      rightOrDown: function (clientXY, mainBox, LeftOrTop, typeWH) {
+        // 剪切框的width或height
+        let widthOrHeight = clientXY - 30 - LeftOrTop
+        let imgLOrT, imgWOrH
+        // 判断类型时右还是down
+        if (typeWH === 'width') {
+          imgLOrT = this.imgContainerLeft
+          imgWOrH = this.imgContainerWidth
+        } else {
+          imgLOrT = this.imgContainerTop
+          imgWOrH = this.imgContainerHeight
+        }
+        // 剪切框可以向右或向上伸长的最长长度
+        let largeWOrH = imgLOrT + imgWOrH - LeftOrTop
         // 如果超出的话，做截断处理
-        width = width > largeWidth ? largeWidth : width
+        widthOrHeight = widthOrHeight > largeWOrH ? largeWOrH : widthOrHeight
         // 当裁剪宽小于最小宽度时，不作处理，否则会出现裁剪框一直移动的问题
-        if(width < this.BOX_MINIMUM) {
+        if(widthOrHeight < this.BOX_MINIMUM) {
           return
         }
-        mainBox.style.width = width + 'px'
-        
+        mainBox.style[typeWH] = widthOrHeight + 'px'
       },
       // 向上或者向左拉伸
       leftOrUp: function(clientXY, mainBox, LeftOrTop, oldHW, typeWH) {
@@ -197,19 +207,6 @@ export default {
         mainBox.style[typeWH] = widthOrHeight + 'px'
         mainBox.style[typeLT] = newLOrT + 'px'
       }
-    },
-    created () {
-      // window.onmousedown = (e) => {
-      //   e.stopPropagation()
-      //   this.ifDown = true
-      //   // console.log(e)
-      //   // console.log('鼠标按下啦')
-      // }
-      // window.onmouseup = (e) => {
-      //   e.stopPropagation()
-      //   // this.ifDown = false
-      //   // console.log('鼠标没按啦')
-      // }
     }
 }
 </script>
