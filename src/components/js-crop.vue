@@ -8,14 +8,14 @@
                 </div>
                 <!-- 裁剪框 -->
                 <div id="mainBox" draggable="true" @dragstart="mainBoxDragS" @dragend="mainBoxDragE">
-                    <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <!-- <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
                     <div id="up" class="minBox up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <!-- <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
                     <div id="left" class="minBox left" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
                     <div id="right" class="minBox right" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <!-- <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
                     <div id="down" class="minBox down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-                    <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
+                    <!-- <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
                 </div>
             </div>
             <!-- 预览部分 -->
@@ -47,7 +47,8 @@ export default {
         imgContainerLeft: 0,  // 图片剪切区域距离浏览器的left 距离
         imgContainerTop: 0,    // 图片剪切区域距离浏览器的top 距离
         imgContainerWidth: 0,  // 图片剪切区域的宽
-        imgContainerHeight: 0  // 图片剪切区域的高
+        imgContainerHeight: 0,  // 图片剪切区域的高
+        BOX_MINIMUM: 10          // 裁剪框的最小范围
       }
     },
     methods : {
@@ -100,7 +101,7 @@ export default {
         let mainBox = document.getElementById('mainBox')
         let mainboxWidth = mainBox.clientWidth
         let mainboxHeight = mainBox.clientHeight
-        // 判断剪切框被脱出的情况，并处理
+        // 判断剪切框被拖出的情况，并处理
         if (top < this.imgContainerTop) {
           if(!this.imgContainerTop) {
             top = 0
@@ -134,7 +135,7 @@ export default {
         // 剪切框的left
         let mainBoxLeft = Number(mainBox.style.left.slice(0, -2))
         // 剪切框的up
-        let mainBoxUp = Number(mainBox.style.up.slice(0, -2))
+        let mainBoxTop = Number(mainBox.style.top.slice(0, -2))
         switch (e.target.id) {
           case 'right': {
             this.rightChange({clientX,clientY}, mainBox, mainBoxLeft)
@@ -145,25 +146,29 @@ export default {
             break
           }
           case 'up': {
-            this.upChange({clientX,clientY}, mainBox, mainBoxUp)
+            // this.upChange({clientX,clientY}, mainBox, mainBoxUp)
           }
         }
       },
       // 向右移动
       rightChange: function (obj, mainBox, mainBoxLeft) {
-        let {clientX, clientY} = obj
+        let {clientX} = obj
         // 剪切框的width
         let width = clientX - 30 - mainBoxLeft
         // 剪切框可以向右伸长的最长长度
         let largeWidth = this.imgContainerLeft + this.imgContainerWidth - mainBoxLeft
         // 如果超出的话，做截断处理
         width = width > largeWidth ? largeWidth : width
+        // 当裁剪宽小于最小宽度时，不作处理，否则会出现裁剪框一直移动的问题
+        if(width < this.BOX_MINIMUM) {
+          return
+        }
         mainBox.style.width = width + 'px'
         
       },
       // 向左移动
       leftChange: function(obj, mainBox, mainBoxLeft) {
-        let {clientX, clientY} = obj
+        let {clientX} = obj
         // 当drop时，clientX突然会变为0，小坑
         if(clientX === 0) {
           return false
@@ -180,6 +185,10 @@ export default {
         if(width > largeWidth) {
           width = largeWidth
           leftMove = 0
+        }
+        // 当裁剪宽小于最小宽度时，不作处理，否则会出现裁剪框一直移动的问题
+        if(width < this.BOX_MINIMUM) {
+          return
         }
         mainBox.style.width = width + 'px'
         mainBox.style.left = leftMove + 'px'
