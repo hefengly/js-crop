@@ -62,6 +62,7 @@ export default {
       // 监听页面变化
       window.onresize = () => {
         this.getImgCData()
+        this.computePosition()
       }
     },
     methods : {
