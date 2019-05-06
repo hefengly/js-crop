@@ -7,14 +7,14 @@
         </div>
         <!-- 裁剪框 -->
         <div id="mainBox" draggable="true" @dragstart="mainBoxDragS" @dragend="mainBoxDragE">
-            <!-- <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="left-up" class="minBox left-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
             <div id="up" class="minBox up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-            <!-- <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="right-up" class="minBox right-up" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
             <div id="left" class="minBox left" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
             <div id="right" class="minBox right" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-            <!-- <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="left-down" class="minBox left-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
             <div id="down" class="minBox down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
-            <!-- <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div> -->
+            <div id="right-down" class="minBox right-down" draggable="true" @dragstart="changeDragS" @drag="changeE"></div>
         </div>
       </div>
 
@@ -164,6 +164,23 @@ export default {
           }
           case 'down': {
             this.rightOrDown(clientY, mainBox, mainBoxTop, 'height')
+            break
+          }
+          case 'right-up': {
+            this.diagonal({clientX, clientY}, mainBox, mainBoxLeft, mainBoxTop, oldWidth, oldHeight,'right-up')
+            break
+          }
+          case 'right-down': {
+            this.diagonal({clientX, clientY}, mainBox, mainBoxLeft, mainBoxTop, oldWidth, oldHeight,'right-down')
+            break           
+          }
+          case 'left-up': {
+            this.diagonal({clientX, clientY}, mainBox, mainBoxLeft, mainBoxTop, oldWidth, oldHeight,'left-up')
+            break           
+          }
+          case 'left-down': {
+            this.diagonal({clientX, clientY}, mainBox, mainBoxLeft, mainBoxTop, oldWidth, oldHeight,'left-down')
+            break           
           }
         }
         // 计算剪切框的位置
@@ -193,7 +210,7 @@ export default {
         mainBox.style[typeWH] = widthOrHeight + 'px'
       },
       // 向上或者向左拉伸
-      leftOrUp: function(clientXY, mainBox, LeftOrTop, oldHW, typeWH) {
+      leftOrUp: function (clientXY, mainBox, LeftOrTop, oldHW, typeWH) {
         // 当drop时，clientX或者clientY突然会变为0，小坑
         if(clientXY === 0) {
           return false
@@ -217,6 +234,47 @@ export default {
         let typeLT = (typeWH === 'width') ? 'left' : 'top'
         mainBox.style[typeWH] = widthOrHeight + 'px'
         mainBox.style[typeLT] = newLOrT + 'px'
+      },
+      // 向右上或右下拉伸
+      diagonal: function (obj, mainBox, mainBoxLeft, mainBoxTop, oldW, oldH, type) {
+        let {clientX, clientY} = obj
+        // 当drop时，clientX或者clientY突然会变为0，小坑
+        if(clientX === 0) {
+          return false
+        }
+        // 剪切框移动后的width/height,剪切框在水平/竖直方向拉伸的最长长度, 剪切框移动后的letf/top
+        let width, height, largeWidth, largeHeight, newLeft, newTop
+        // 水平分为左和右
+        if (type === 'right-up' || type === 'right-down') {
+          width = clientX - 30 - mainBoxLeft
+          largeWidth = this.imgContainerLeft + this.imgContainerWidth - mainBoxLeft
+          newLeft = Number(mainBox.style.left.slice(0,-2))
+        } else if (type === 'left-up' || type === 'left-down') {
+          width = oldW + mainBoxLeft + 30 - clientX
+          largeWidth = mainBoxLeft + oldW
+          newLeft = (width > largeWidth) ? 0 : (clientX - 30)
+        }
+        // 竖直分为上和下
+        if (type === 'right-up' || type === 'left-up') {
+          height = oldH + mainBoxTop + 30 -clientY
+          largeHeight = mainBoxTop + oldH
+          newTop = (height > largeHeight) ? 0 : (clientY - 30)
+        } else if (type === 'right-down' || type === 'left-down') {
+          height = clientY - 30 - mainBoxTop
+          largeHeight = this.imgContainerTop + this.imgContainerHeight - mainBoxTop
+          newTop = Number(mainBox.style.top.slice(0,-2))
+        }
+        width = width > largeWidth ? largeWidth : width
+        height = height > largeHeight ? largeHeight : height
+         // 当裁剪宽小于最小宽度或高度时，不作处理，否则会出现裁剪框一直移动的问题
+        if(!(width < this.BOX_MINIMUM)) {
+          mainBox.style.width = width + 'px'
+          mainBox.style.left = newLeft + 'px'
+        }
+        if(!(height < this.BOX_MINIMUM)) {
+          mainBox.style.height = height + 'px'
+          mainBox.style.top = newTop + 'px'
+        }
       },
       // 计算裁剪框的位置
       computePosition: function () {
