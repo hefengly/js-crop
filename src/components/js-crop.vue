@@ -53,25 +53,21 @@ export default {
         left_L: '0%',              // 剪切框左边的left位置
         top_T: '0%',               // 剪切框上边的top位置
         left_R: '0%',             // 剪切框右边的left位置,
-        top_B: '0%'               // 剪切框下边的top位置
+        top_B: '0%',               // 剪切框下边的top位置
+        isImgOnload: false         // 图片是否加载完
       }
     },
     mounted: function () {
-      // 图片容器的位置
-      let img_container = this.$refs.imgContainer
-      this.imgContainerLeft = img_container.style.left
-      this.imgContainerTop = img_container.style.top
-      // 图片容器的宽高
-      this.imgContainerWidth = img_container.clientWidth
-      // 因为图片加载时异步的，要等加载完才能获取到正确的高度
-      this.$refs.img.onload = ()=>{
-          this.imgContainerHeight = img_container.clientHeight
+      this.getImgCData()
+      // 监听页面变化
+      window.onresize = () => {
+        this.getImgCData()
       }
     },
     methods : {
       // 导入图片时，更换展示区块的URL
       imgChange: function (event) {
-      // 根据这个 <input> 获取文件的 HTML5 js对象
+        // 根据这个 <input> 获取文件的 HTML5 js对象
         var files = event.target.files
         if (files && files.length > 0) {
             // 获取目前上传的文件
@@ -222,7 +218,7 @@ export default {
         mainBox.style[typeLT] = newLOrT + 'px'
       },
       // 计算裁剪框的位置
-      computePosition: function() {
+      computePosition: function () {
         let mainBox = document.getElementById('mainBox')
         let width = mainBox.clientWidth
         let height = mainBox.clientHeight
@@ -232,6 +228,24 @@ export default {
         this.top_T = ((top / this.imgContainerHeight) * 100 + '').slice(0, 5) + '%'
         this.left_R = (((left + width) / this.imgContainerWidth) * 100 + '').slice(0, 5) + '%'
         this.top_B = (((top + height) / this.imgContainerHeight) * 100 + '').slice(0, 5) + '%'
+      },
+      // 得到图片位置的信息
+      getImgCData: function () {
+        // 图片容器的位置
+        let img_container = this.$refs.imgContainer
+        this.imgContainerLeft = img_container.style.left
+        this.imgContainerTop = img_container.style.top
+        // 图片容器的宽高
+        this.imgContainerWidth = img_container.clientWidth
+        // 因为图片加载时异步的，要等加载完才能获取到正确的高度
+        if(!this.isImgOnload) {
+          this.$refs.img.onload = ()=>{
+              this.imgContainerHeight = img_container.clientHeight
+              this.isImgOnload = true
+          }
+        } else {
+          this.imgContainerHeight = img_container.clientHeight
+        }
       }
     }
 }
